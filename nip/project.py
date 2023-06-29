@@ -43,7 +43,7 @@ class Project:
     
     def __getatt__(self, name: str) -> Any:
         if name in self.dataclass.keys():
-            return self.dataclass['name']
+            return self.dataclass[name]
         else:
             raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
     
