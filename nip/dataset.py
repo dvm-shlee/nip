@@ -367,7 +367,8 @@ class BaseParser:
             relpath = dirpath[self._abs_path_depth:]
             depth_step = len(relpath)
 
-            if len(dirnames) == 0:
+            # TODO: apply filter to determine max_depth, (.nipignore)
+            if len([d for d in dirnames if not d.startswith('.')]) == 0:
                 # update max depth
                 if depth_step > max_depth:
                     max_depth = depth_step
