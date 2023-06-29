@@ -41,7 +41,7 @@ class Project:
     def reload(self):
         self._scan()
     
-    def __getatt__(self, name: str) -> Any:
+    def __getattr__(self, name: str) -> Any:
         if name in self.dataclass.keys():
             return self.dataclass[name]
         else:
