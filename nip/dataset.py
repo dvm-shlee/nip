@@ -6,6 +6,7 @@ from copy import copy
 from .helper import *
 from .error import *
 
+bidsignore = ['.ipynb_checkpoints']
 
 # dataclasses
 @dataclass
@@ -366,9 +367,10 @@ class BaseParser:
             dirpath = str_to_list(dirpath)
             relpath = dirpath[self._abs_path_depth:]
             depth_step = len(relpath)
+            dirnames = [d for d in dirnames if d not in bidsignore]
 
             # TODO: apply filter to determine max_depth, (.nipignore)
-            if len([d for d in dirnames if not d.startswith('.')]) == 0:
+            if len(dirnames) == 0:
                 # update max depth
                 if depth_step > max_depth:
                     max_depth = depth_step
@@ -452,8 +454,9 @@ class BaseParser:
             if len(is_not_bidsfiles):
                 for relpath, sess in files.by_depth[max_depth].items():
                     for filename in sess:
-                        filepath = os.path.join(relpath, filename)
-                        warn(f"'{filepath}' does not match the expected BIDS file format.", UserWarning)
+                        if filename in is_not_bidsfiles:
+                            filepath = os.path.join(relpath, filename)
+                            warn(f"'{filepath}' does not match the expected BIDS file format.", UserWarning)
         
         # returns validated subjects and sessions
         if modal:
