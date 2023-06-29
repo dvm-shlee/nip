@@ -427,9 +427,9 @@ class BaseParser:
         if not all(is_subjects):
             for i, subj in enumerate(subjects):
                 # If a subject name does not match the required pattern, warn about a potential compliance issue
-                if is_subjects[i]:
+                if not is_subjects[i]:
                     warn(f"The folder '{subj}' is excluded because it does not match the expected 'sub-*' format.", UserWarning)
-                subjects = [s for i, s in enumerate(subjects) if is_subjects[i]]
+            subjects = [s for i, s in enumerate(subjects) if is_subjects[i]]
         
         # if multi session dataset, validate session names
         if max_depth == ref.multi_session:
@@ -438,9 +438,9 @@ class BaseParser:
             if not all(is_sessions):
                 for i, sess in enumerate(sessions):
                     # If a session name does not match the required pattern, warn about a potential compliance issue
-                    if is_sessions[i]:
+                    if not is_sessions[i]:
                         warn(f"The folder '{sess}' is excluded because it does not match the expected 'ses-*' format.", UserWarning)
-                    sessions = [s for i, s in enumerate(sessions) if is_sessions[i]]
+                sessions = [s for i, s in enumerate(sessions) if is_sessions[i]]
         else:
             sessions = None
 
