@@ -371,7 +371,7 @@ class BaseParser:
             # filter dirs in ignore list
             dirnames = [d for d in dirnames if d not in ignore]
             # filter path in ignore list
-            ignored = [d for d in dirpath.split(os.sep) if d in ignore]
+            ignored = [d for d in dirpath if d in ignore]
             
             if len(ignored) == 0:
                 if len(dirnames) == 0:
