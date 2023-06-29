@@ -397,14 +397,19 @@ class BaseParser:
         """
         Validate the dataset structure according to BIDS standards.
 
-        The method checks the depth of the dataset (based on the reference given for single and multi session dataset) and the compliance 
-        of subject, session(optional), modal, and file names to BIDS naming conventions. In case of non-compliance, an InvalidFormatError is raised.
+        This method verifies the depth of the dataset based on the provided reference for single-session and multi-session datasets, 
+        and validates the compliance of the subject, session (optional), modal, and file names with BIDS naming conventions. 
+        If any element is not compliant, an UserWarning is issued.
 
         The validated subjects and sessions are stored in the `subjects` and `sessions` attributes of the instance.
 
         Raises:
         - ValueError: If the dataset depth is not compliant with BIDS standards.
-        - InvalidFormatError: If subject, session, or file names are not compliant with BIDS naming conventions.
+        - UserWarning: If subject, session, or file names are not compliant with BIDS naming conventions, 
+            a warning is issued instead of raising an error.
+            
+        Returns:
+        - A tuple of three lists containing the validated subjects, sessions, and modals.
         """
         # check dataset depth, 2 for single session and 3 for multi session dataset
         if max_depth not in ref.list:
@@ -420,24 +425,34 @@ class BaseParser:
         subjects = sorted([s for s in dirs.by_depth[0]['']])
         is_subjects = [subj_pattern.match(s) != None for s in subjects]
         if not all(is_subjects):
-            raise InvalidFormatError("Not all subjects match the expected 'sub-*' format.")
+            for i, subj in enumerate(subjects):
+                # If a subject name does not match the required pattern, warn about a potential compliance issue
+                if is_subjects[i]:
+                    warn(f"The folder '{subj}' is excluded because it does not match the expected 'sub-*' format.", UserWarning)
+                subjects = [s for i, s in enumerate(subjects) if is_subjects[i]]
         
         # if multi session dataset, validate session names
         if max_depth == ref.multi_session:
             sessions = sorted(list(set([sess for sesses in dirs.by_depth[ref.multi_session].values() for sess in sesses])))
             is_sessions = [sess_pattern.match(s) != None for s in sessions]
             if not all(is_sessions):
-                raise InvalidFormatError("Not all sessions match the expected 'ses-*' format.")
+                for i, sess in enumerate(sessions):
+                    # If a session name does not match the required pattern, warn about a potential compliance issue
+                    if is_sessions[i]:
+                        warn(f"The folder '{sess}' is excluded because it does not match the expected 'ses-*' format.", UserWarning)
+                    sessions = [s for i, s in enumerate(sessions) if is_sessions[i]]
         else:
             sessions = None
 
         # if files are included in parsing, validate file names
         if not dir_only:
-            filenames = sorted([filename for (_, sess) in files.by_depth[max_depth].items() for filename in sess])
+            filenames = sorted([filename for sess in files.by_depth[max_depth].values() for filename in sess])
             is_not_bidsfiles = [filename for filename in filenames if file_pattern.match(filename) == None]
             if len(is_not_bidsfiles):
-                files_need_to_be_reviewed = "\n".join(is_not_bidsfiles)
-                raise InvalidFormatError(f"Not all file match the expected file format.\n{files_need_to_be_reviewed}")
+                for relpath, sess in files.by_depth[max_depth].items():
+                    for filename in sess:
+                        filepath = os.path.join(relpath, filename)
+                        warn(f"'{filepath}' does not match the expected BIDS file format.", UserWarning)
         
         # returns validated subjects and sessions
         if modal:
