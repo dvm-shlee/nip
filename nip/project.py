@@ -1,4 +1,5 @@
 import os
+from typing import Any
 from .dataset import RawDataset, ProcDataset, StepDataset, StepItem, MaskItem
 
 
@@ -39,7 +40,13 @@ class Project:
 
     def reload(self):
         self._scan()
-        
+    
+    def __getatt__(self, name: str) -> Any:
+        if name in self.dataclass.keys():
+            return self.dataclass['name']
+        else:
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+    
     def __repr__(self):
         repr = []
         for d, ds in self.dataclass.items():
