@@ -6,7 +6,8 @@ from copy import copy
 from .helper import *
 from .error import *
 
-bidsignore = ['.ipynb_checkpoints']
+# TODO: apply config parser
+ignore = ['.ipynb_checkpoints']
 
 # dataclasses
 @dataclass
@@ -367,23 +368,26 @@ class BaseParser:
             dirpath = str_to_list(dirpath)
             relpath = dirpath[self._abs_path_depth:]
             depth_step = len(relpath)
-            dirnames = [d for d in dirnames if d not in bidsignore]
+            # filter dirs in ignore list
+            dirnames = [d for d in dirnames if d not in ignore]
+            # filter path in ignore list
+            ignored = [d for d in dirpath.split(os.sep) if d in ignore]
+            
+            if len(ignored) == 0:
+                if len(dirnames) == 0:
+                    # update max depth
+                    if depth_step > max_depth:
+                        max_depth = depth_step
+                else:
+                    if depth_step not in dirs_by_depth.keys():
+                        dirs_by_depth[depth_step] = dict()
+                    dirs_by_depth[depth_step][os.path.sep.join(relpath)] = sorted(dirnames)
 
-            # TODO: apply filter to determine max_depth, (.nipignore)
-            if len(dirnames) == 0:
-                # update max depth
-                if depth_step > max_depth:
-                    max_depth = depth_step
-            else:
-                if depth_step not in dirs_by_depth.keys():
-                    dirs_by_depth[depth_step] = dict()
-                dirs_by_depth[depth_step][os.path.sep.join(relpath)] = sorted(dirnames)
-
-            if not self.dir_only:
-                if len(filenames):
-                    if depth_step not in files_by_depth.keys():
-                        files_by_depth[depth_step] = dict()    
-                    files_by_depth[depth_step][os.path.sep.join(relpath)] = sorted(filenames)
+                if not self.dir_only:
+                    if len(filenames):
+                        if depth_step not in files_by_depth.keys():
+                            files_by_depth[depth_step] = dict()    
+                        files_by_depth[depth_step][os.path.sep.join(relpath)] = sorted(filenames)
 
         self._files_by_depth = files_by_depth
         self._dirs_by_depth = dirs_by_depth
